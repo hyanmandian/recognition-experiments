@@ -1,0 +1,58 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Node OpenCV</title>
+    <style>
+      #video {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <video id="video" width="600" height="450" muted preload="auto"></video>
+    <img id="img" />
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const img = document.querySelector('#img');
+      const video = document.querySelector('#video');
+      const socket = io();
+
+      const process = () => {
+        const canvas = document.createElement('canvas');
+        canvas.height = video.videoHeight;
+        canvas.width = video.videoWidth;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        socket.emit('process', canvas.toDataURL());
+      }
+
+      const render = (frame) => {
+        img.src = frame;
+
+        process();
+      }
+
+      socket.on('frame', render);
+
+      video.addEventListener('loadeddata', process, false);
+
+      navigator.getMedia = (
+        navigator.getUserMedia ||
+        navigator.webkitGetUserMedia ||
+        navigator.mozGetUserMedia ||
+        navigator.msGetUserMedia
+      );
+
+      navigator.getMedia({ video: true }, (stream) => {
+        video.src = window.URL.createObjectURL(stream);
+        video.play();
+      }, (err) => {
+        console.error(err);
+      });
+    </script>
+  </body>
+</html>
